@@ -34,20 +34,28 @@
       <table class="min-w-full">
         <thead class="bg-gray-200">
           <tr>
-            <th class="py-2 px-4">Invoice #</th>
-            <th class="py-2 px-4">Vendor</th>
-            <th class="py-2 px-4">Amount</th>
-            <th class="py-2 px-4">Date</th>
+            <th class="py-2 px-4">ID:</th>
+            <th class="py-2 px-4">Created At:</th>
+            <th class="py-2 px-4">Updated At:</th>
+            <th class="py-2 px-4">Total:</th>
+            <th class="py-2 px-4">Tax:</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="invoice in invoices" :key="invoice.id" class="border-b">
-            <td class="py-2 px-4">{{ invoice.invoiceNumber }}</td>
-            <td class="py-2 px-4">{{ invoice.vendor.name }}</td>
-            <td class="py-2 px-4">${{ invoice.amount.toFixed(2) }}</td>
+          <tr
+            v-for="invoice in invoices"
+            :key="invoice.entityId"
+            class="border-b"
+          >
+            <td class="py-2 px-4">{{ invoice.entityId }}</td>
             <td class="py-2 px-4">
-              {{ new Date(invoice.invoiceDate).toLocaleDateString() }}
+              {{ new Date(invoice.createdAt).toLocaleDateString("en-GB") }}
             </td>
+            <td class="py-2 px-4">
+              {{ new Date(invoice.updatedAt).toLocaleDateString("en-GB") }}
+            </td>
+            <td class="py-2 px-4">${{ invoice.total }}</td>
+            <td class="py-2 px-4">${{ invoice.tax }}</td>
           </tr>
         </tbody>
       </table>
@@ -59,10 +67,14 @@
 import { ref, onMounted } from "vue";
 import apiClient from "../services/api";
 import { Invoice } from "../types";
+import { useCrud } from "@/services/crud.service";
 
-const invoices = ref<Invoice[]>([]);
-const loading = ref(false);
-const error = ref<string | null>(null);
+const {
+  items: invoices,
+  loading,
+  error,
+  fetchAll,
+} = useCrud<Invoice>("/invoices");
 
 const selectedFile = ref<File | null>(null);
 const uploadStatus = ref({
@@ -71,19 +83,7 @@ const uploadStatus = ref({
   isError: false,
 });
 
-const fetchInvoices = async () => {
-  loading.value = true;
-  error.value = null;
-  try {
-    const response = await apiClient.get("/invoices");
-    invoices.value = response.data;
-  } catch (err: any) {
-    error.value = "Failed to fetch invoices.";
-    console.error(err);
-  } finally {
-    loading.value = false;
-  }
-};
+onMounted(fetchAll);
 
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -112,7 +112,8 @@ const uploadFile = async () => {
       message: "File uploaded successfully!",
       isError: false,
     };
-    await fetchInvoices(); // Refresh the list
+    // Refresh the list
+    await fetchAll();
   } catch (err: any) {
     uploadStatus.value = {
       uploading: false,
@@ -122,8 +123,6 @@ const uploadFile = async () => {
     console.error(err);
   }
 };
-
-onMounted(fetchInvoices);
 </script>
 
 <!-- TODO: Invoice detail-->

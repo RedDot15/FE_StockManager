@@ -22,12 +22,11 @@ export interface Vendor {
 }
 
 export interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  vendor: Vendor;
-  amount: number;
-  invoiceDate: string;
-  // Add other fields as they appear in your API response
+  entityId: string;
+  createdAt: string;
+  updatedAt: string;
+  total: number;
+  tax: number;
 }
 
 export interface RevenueStat {
