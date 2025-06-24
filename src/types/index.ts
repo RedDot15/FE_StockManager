@@ -29,7 +29,22 @@ export interface Invoice {
   tax: number;
 }
 
-export interface RevenueStat {
-  name: string; // Vendor, Product, or Category name
-  revenue: number;
+export interface CategoryRevenueStat {
+  name: string;
+  totalRevenue: number;
+}
+
+export interface VendorRevenueStat {
+  id: string;
+  name: string;
+  totalRevenue: number;
+}
+
+export interface ProductRevenueStat {
+  id: string;
+  name: string;
+  vendorName: string;
+  categoryName: string;
+  amount: number;
+  totalRevenue: number;
 }
