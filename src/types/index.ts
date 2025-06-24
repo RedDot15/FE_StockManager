@@ -27,6 +27,16 @@ export interface Invoice {
   updatedAt: string;
   total: number;
   tax: number;
+  sales: SaleItem[];
+}
+
+export interface SaleItem {
+  productId: string;
+  vendorId: string;
+  categoryName: string;
+  amount: number;
+  price: number;
+  vat: number;
 }
 
 export interface CategoryRevenueStat {
