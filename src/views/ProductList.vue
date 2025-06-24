@@ -146,6 +146,14 @@
                 required
                 :disabled="isEditing"
               />
+              <button
+                v-if="!isEditing"
+                type="button"
+                @click="generateProductId"
+                class="mt-2 px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
+              >
+                Generate ID
+              </button>
             </div>
             <div class="mb-4">
               <label class="label">Name</label>
@@ -266,6 +274,7 @@ import { onMounted, reactive, ref, computed } from "vue";
 import apiClient from "../services/api";
 import { Product } from "../types";
 import { useAuthStore } from "../stores/auth.store";
+import { v4 as uuidv4 } from "uuid";
 
 const PAGE_LIMIT = 10;
 
@@ -445,6 +454,11 @@ const uploadFile = async () => {
     console.error(err);
   }
 };
+
+// --- UUID Generation Logic ---
+const generateProductId = () => {
+  currentProduct.entityId = uuidv4();
+};
 </script>
 
 <style scoped>
@@ -470,7 +484,3 @@ const uploadFile = async () => {
   @apply px-4 py-2 bg-red-600 text-white rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500;
 }
 </style>
-
-<!-- TODO: Product import -->
-
-<!-- TODO: Generate random ID -->
