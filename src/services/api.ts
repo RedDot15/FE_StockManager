@@ -29,9 +29,13 @@ export const setupAxiosInterceptors = () => {
     async (error) => {
       const originalRequest = error.config;
       const authStore = useAuthStore();
-
+      console.log(originalRequest);
       // Handle token refresh on 401 Unauthorized errors
-      if (error.response.status === 401 && !originalRequest._retry) {
+      if (
+        error.response.status === 401 &&
+        !originalRequest._retry &&
+        originalRequest.url !== "/auth/tokens/refresh"
+      ) {
         originalRequest._retry = true;
         try {
           await authStore.refreshToken();
