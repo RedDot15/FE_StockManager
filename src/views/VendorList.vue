@@ -21,7 +21,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="vendor in vendors" :key="vendor.id" class="border-b">
+          <tr v-for="vendor in vendors" :key="vendor.entityId" class="border-b">
             <td class="py-2 px-4">{{ vendor.entityId }}</td>
             <td class="py-2 px-4">{{ vendor.name }}</td>
             <td v-if="isAdmin" class="py-2 px-4">

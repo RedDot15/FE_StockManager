@@ -5,11 +5,15 @@ export interface User {
 }
 
 export interface Product {
-  id: string;
+  entityId: string;
   name: string;
-  description: string;
-  price: number;
-  category: string;
+  vendorId: string;
+  categoryName: string;
+  importPrice: number;
+  salePrice: number;
+  vat: number;
+  amount: number;
+  earliestExpiry: string;
 }
 
 export interface Vendor {

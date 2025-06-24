@@ -15,21 +15,33 @@
       <table class="min-w-full bg-white rounded-lg shadow">
         <thead class="bg-gray-200">
           <tr>
+            <th class="py-2 px-4">ID</th>
             <th class="py-2 px-4">Name</th>
-            <th class="py-2 px-4">Category</th>
-            <th class="py-2 px-4">Price</th>
+            <th class="py-2 px-4">Vendor ID</th>
+            <th class="py-2 px-4">Category Name</th>
+            <th class="py-2 px-4">Import Price</th>
+            <th class="py-2 px-4">Sale Price</th>
+            <th class="py-2 px-4">VAT</th>
+            <th class="py-2 px-4">Amount</th>
+            <th class="py-2 px-4">Earliest Expiry</th>
             <th v-if="isAdmin" class="py-2 px-4">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr
-            v-for="product in products.items.value"
-            :key="product.id"
+            v-for="product in products"
+            :key="product.entityId"
             class="border-b"
           >
+            <td class="py-2 px-4">{{ product.entityId }}</td>
             <td class="py-2 px-4">{{ product.name }}</td>
-            <td class="py-2 px-4">{{ product.category }}</td>
-            <td class="py-2 px-4">${{ product.price.toFixed(2) }}</td>
+            <td class="py-2 px-4">{{ product.vendorId }}</td>
+            <td class="py-2 px-4">{{ product.categoryName }}</td>
+            <td class="py-2 px-4">{{ product.importPrice.toFixed(2) }}</td>
+            <td class="py-2 px-4">{{ product.salePrice.toFixed(2) }}</td>
+            <td class="py-2 px-4">{{ product.vat.toFixed(2) }}</td>
+            <td class="py-2 px-4">{{ product.amount }}</td>
+            <td class="py-2 px-4">{{ product.earliestExpiry }}</td>
             <td v-if="isAdmin" class="py-2 px-4">
               <button
                 @click="openModal(product)"
@@ -38,7 +50,7 @@
                 Edit
               </button>
               <button
-                @click="deleteProduct(product.id)"
+                @click="deleteProduct(product.entityId)"
                 class="ml-4 text-red-500 hover:underline"
               >
                 Delete
@@ -55,10 +67,18 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
     >
       <div class="bg-white p-6 rounded-lg shadow-xl w-1/3">
-        <h2 class="text-2xl mb-4">
-          {{ currentProduct.id ? "Edit" : "Add" }} Product
-        </h2>
+        <h2 class="text-2xl mb-4">{{ isEditing ? "Edit" : "Add" }} Product</h2>
         <form @submit.prevent="saveProduct">
+          <div class="mb-4">
+            <label>ID:</label>
+            <input
+              v-model="currentProduct.entityId"
+              type="text"
+              class="w-full p-2 border rounded"
+              required
+              :disabled="isEditing"
+            />
+          </div>
           <div class="mb-4">
             <label>Name:</label>
             <input
@@ -69,30 +89,71 @@
             />
           </div>
           <div class="mb-4">
-            <label>Category:</label>
+            <label>Vendor ID:</label>
             <input
-              v-model="currentProduct.category"
+              v-model="currentProduct.vendorId"
               type="text"
               class="w-full p-2 border rounded"
               required
             />
           </div>
           <div class="mb-4">
-            <label>Description:</label>
+            <label>Category:</label>
             <textarea
-              v-model="currentProduct.description"
+              v-model="currentProduct.categoryName"
+              type="text"
               class="w-full p-2 border rounded"
+              required
             ></textarea>
           </div>
           <div class="mb-4">
-            <label>Price:</label>
+            <label>Import Price:</label>
             <input
-              v-model.number="currentProduct.price"
+              v-model.number="currentProduct.importPrice"
               type="number"
               step="0.01"
               class="w-full p-2 border rounded"
               required
             />
+          </div>
+          <div class="mb-4">
+            <label>Sale Price:</label>
+            <input
+              v-model.number="currentProduct.salePrice"
+              type="number"
+              step="0.01"
+              class="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label>VAT:</label>
+            <input
+              v-model.number="currentProduct.vat"
+              type="number"
+              step="0.01"
+              class="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label>Amount:</label>
+            <input
+              v-model.number="currentProduct.amount"
+              type="number"
+              step="1"
+              class="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label>Earliest Expiry:</label>
+            <textarea
+              v-model="currentProduct.earliestExpiry"
+              type="text"
+              class="w-full p-2 border rounded"
+              required
+            ></textarea>
           </div>
           <div class="flex justify-end">
             <button
@@ -135,35 +196,41 @@ const isAdmin = computed(() => authStore.isAdmin);
 
 const showModal = ref(false);
 const emptyProduct: Product = {
-  id: "",
+  entityId: "",
   name: "",
-  description: "",
-  price: 0,
-  category: "",
+  vendorId: "",
+  categoryName: "",
+  importPrice: 0,
+  salePrice: 0,
+  vat: 0,
+  amount: 0,
+  earliestExpiry: "",
 };
 let currentProduct = reactive<Product>({ ...emptyProduct });
+const isEditing = ref(false);
 
 onMounted(fetchAll);
 
 const openModal = (product: Product | null = null) => {
   if (product) {
     Object.assign(currentProduct, product);
+    isEditing.value = true;
   } else {
     Object.assign(currentProduct, emptyProduct);
+    isEditing.value = false;
   }
   showModal.value = true;
 };
 
 const saveProduct = async () => {
   try {
-    if (currentProduct.id) {
-      await update(currentProduct.id, currentProduct);
+    if (isEditing.value) {
+      await update(currentProduct.entityId, currentProduct);
     } else {
-      const { id, ...newProductData } = currentProduct;
-      await create(newProductData);
+      await create(currentProduct);
+      await fetchAll();
     }
     showModal.value = false;
-    await fetchAll(); // Re-fetch to see changes
   } catch (err) {
     console.error("Failed to save product:", err);
   }
@@ -173,7 +240,7 @@ const deleteProduct = async (id: string) => {
   if (confirm("Are you sure you want to delete this product?")) {
     try {
       await remove(id);
-      await fetchAll(); // Re-fetch
+      await fetchAll();
     } catch (err) {
       console.error("Failed to delete product:", err);
     }
