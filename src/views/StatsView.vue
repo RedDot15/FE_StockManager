@@ -157,7 +157,7 @@ const fetchStats = async () => {
     const response = await apiClient.get<any>(`/stats/${statType.value}`, {
       params: { startDate: fromDate.value, endDate: toDate.value },
     });
-    stats.value = response.data.data.items;
+    stats.value = response.data.data;
   } catch (err: any) {
     error.value = err.response?.data?.message || "Failed to fetch statistics.";
     console.error(err);
