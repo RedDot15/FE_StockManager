@@ -39,6 +39,54 @@
       </button>
     </div>
 
+    <div
+      class="mb-4 p-4 bg-white rounded-lg shadow flex flex-wrap gap-4 items-end"
+    >
+      <div class="flex-1 min-w-[200px]">
+        <label for="keyword" class="label">Search by Keyword</label>
+        <input
+          id="keyword"
+          v-model="searchParams.keyword"
+          type="text"
+          class="input"
+          placeholder="Product name, ID, etc."
+          @keyup.enter="applySearch"
+        />
+      </div>
+      <div class="flex-1 min-w-[200px]">
+        <label for="categoryName" class="label">Filter by Category</label>
+        <select
+          id="categoryName"
+          v-model="searchParams.categoryName"
+          class="input"
+          @change="applySearch"
+        >
+          <option value="">All Categories</option>
+          <option
+            v-for="category in productCategories"
+            :key="category"
+            :value="category"
+          >
+            {{ category }}
+          </option>
+        </select>
+      </div>
+      <div class="flex-shrink-0">
+        <button
+          @click="applySearch"
+          class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition"
+        >
+          Search
+        </button>
+        <button
+          @click="clearSearch"
+          class="ml-2 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg shadow hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition"
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+
     <!-- SECTION: LOADING & ERROR STATES -->
     <div
       v-if="initialLoading && products.length === 0"
@@ -67,6 +115,7 @@
             <th class="th-cell">Name</th>
             <th class="th-cell">Vendor ID</th>
             <th class="th-cell">Category</th>
+            <th class="th-cell">Import Price</th>
             <th class="th-cell">Sale Price</th>
             <th class="th-cell">Amount</th>
             <th class="th-cell">Earliest Expiry</th>
@@ -83,6 +132,7 @@
             <td class="td-cell font-medium">{{ product.name }}</td>
             <td class="td-cell">{{ product.vendorId }}</td>
             <td class="td-cell">{{ product.categoryName }}</td>
+            <td class="td-cell">${{ product.importPrice.toFixed(2) }}</td>
             <td class="td-cell">${{ product.salePrice.toFixed(2) }}</td>
             <td class="td-cell">{{ product.amount }}</td>
             <td class="td-cell">{{ product.earliestExpiry }}</td>
@@ -289,6 +339,22 @@ const loadingMore = ref(false);
 const error = ref<string | null>(null);
 const nextPageToken = ref<string | null>(null);
 
+// --- Search Parameters ---
+const searchParams = reactive({
+  keyword: "",
+  categoryName: "", // Will be controlled by the dropdown
+});
+
+// --- Hardcoded Product Categories ---
+const productCategories = [
+  "Home Appliances",
+  "Groceries",
+  "Electronics",
+  "Apparel",
+  "Accessories",
+  "Kitchenware",
+];
+
 // --- State for Modals ---
 const showModal = ref(false);
 const showDeleteConfirm = ref(false);
@@ -329,11 +395,24 @@ const fetchProducts = async (token: string | null = null, refresh = false) => {
   error.value = null;
 
   try {
-    const params: { limit: number; nextPageToken?: string } = {
+    const params: {
+      limit: number;
+      nextPageToken?: string;
+      keyword?: string;
+      categoryName?: string;
+    } = {
       limit: PAGE_LIMIT,
     };
     if (token) {
       params.nextPageToken = token;
+    }
+    // Add search parameters if they exist
+    if (searchParams.keyword) {
+      params.keyword = searchParams.keyword;
+    }
+    // Only include categoryName if it's not empty
+    if (searchParams.categoryName) {
+      params.categoryName = searchParams.categoryName;
     }
 
     const response = await apiClient.get("/products", { params });
@@ -359,6 +438,18 @@ const loadMoreProducts = () => {
   if (nextPageToken.value) {
     fetchProducts(nextPageToken.value);
   }
+};
+
+// --- Search Functionality ---
+const applySearch = () => {
+  nextPageToken.value = null; // Reset pagination for new search
+  fetchProducts(null, true); // Fetch products with search parameters, refreshing the list
+};
+const clearSearch = () => {
+  searchParams.keyword = "";
+  searchParams.categoryName = ""; // Reset dropdown to "All Categories"
+  nextPageToken.value = null; // Reset pagination
+  fetchProducts(null, true); // Fetch all products again
 };
 
 // --- Modal Handling ---

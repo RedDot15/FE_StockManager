@@ -111,7 +111,7 @@
                           ${{ item.price.toFixed(2) }}
                         </td>
                         <td class="td-cell-inner">
-                          ${{ item.vat.toFixed(2) }}
+                          {{ item.vat.toFixed(2) }}
                         </td>
                       </tr>
                     </tbody>
