@@ -39,6 +39,7 @@
       </button>
     </div>
 
+    <!-- SECTION: SEARCH FILTERS -->
     <div
       class="mb-4 p-4 bg-white rounded-lg shadow flex flex-wrap gap-4 items-end"
     >
@@ -71,7 +72,7 @@
           </option>
         </select>
       </div>
-      <div class="flex-shrink-0">
+      <div class="flex-shrink-0 flex items-center gap-2">
         <button
           @click="applySearch"
           class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition"
@@ -83,6 +84,12 @@
           class="ml-2 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg shadow hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition"
         >
           Clear
+        </button>
+        <button
+          @click="downloadExcel"
+          class="px-4 py-2 bg-green-700 text-white rounded-lg shadow hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-700 focus:ring-opacity-50 transition"
+        >
+          Download Excel
         </button>
       </div>
     </div>
@@ -450,6 +457,53 @@ const clearSearch = () => {
   searchParams.categoryName = ""; // Reset dropdown to "All Categories"
   nextPageToken.value = null; // Reset pagination
   fetchProducts(null, true); // Fetch all products again
+};
+
+// --- Download Excel Functionality ---
+const downloadExcel = async () => {
+  try {
+    const params = new URLSearchParams();
+    if (searchParams.keyword) {
+      params.append("keyword", searchParams.keyword);
+    }
+    if (searchParams.categoryName) {
+      params.append("categoryName", searchParams.categoryName);
+    }
+
+    // Make an authenticated API request to get the blob
+    const response = await apiClient.get(
+      "http://localhost:8080/api/products/download-excel",
+      {
+        params,
+        responseType: "blob", // Important for downloading files
+      }
+    );
+
+    // Extract filename from Content-Disposition header if available
+    let filename = "products.xlsx";
+    const contentDisposition = response.headers["content-disposition"];
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1];
+      }
+    }
+
+    // Create a blob URL and trigger download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url); // Clean up the URL
+  } catch (err: any) {
+    console.error("Failed to download Excel file:", err);
+    error.value = `Failed to download Excel: ${
+      err.response?.data?.message || err.message || "An unknown error occurred."
+    }`;
+  }
 };
 
 // --- Modal Handling ---
