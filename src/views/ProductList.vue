@@ -72,6 +72,32 @@
           </option>
         </select>
       </div>
+
+      <div class="flex-1 min-w-[150px]">
+        <label for="minPrice" class="label">Min Price</label>
+        <input
+          id="minPrice"
+          v-model.number="searchParams.minPrice"
+          type="number"
+          step="0.01"
+          class="input"
+          placeholder="e.g., 10.00"
+          @keyup.enter="applySearch"
+        />
+      </div>
+      <div class="flex-1 min-w-[150px]">
+        <label for="maxPrice" class="label">Max Price</label>
+        <input
+          id="maxPrice"
+          v-model.number="searchParams.maxPrice"
+          type="number"
+          step="0.01"
+          class="input"
+          placeholder="e.g., 100.00"
+          @keyup.enter="applySearch"
+        />
+      </div>
+
       <div class="flex-shrink-0 flex items-center gap-2">
         <button
           @click="applySearch"
@@ -350,6 +376,8 @@ const nextPageToken = ref<string | null>(null);
 const searchParams = reactive({
   keyword: "",
   categoryName: "", // Will be controlled by the dropdown
+  minPrice: null,
+  maxPrice: null,
 });
 
 // --- Hardcoded Product Categories ---
@@ -407,6 +435,8 @@ const fetchProducts = async (token: string | null = null, refresh = false) => {
       nextPageToken?: string;
       keyword?: string;
       categoryName?: string;
+      minPrice?: number;
+      maxPrice?: number;
     } = {
       limit: PAGE_LIMIT,
     };
@@ -420,6 +450,13 @@ const fetchProducts = async (token: string | null = null, refresh = false) => {
     // Only include categoryName if it's not empty
     if (searchParams.categoryName) {
       params.categoryName = searchParams.categoryName;
+    }
+    // Add minPrice and maxPrice if they have values
+    if (searchParams.minPrice !== null && searchParams.minPrice !== "") {
+      params.minPrice = Number(searchParams.minPrice);
+    }
+    if (searchParams.maxPrice !== null && searchParams.maxPrice !== "") {
+      params.maxPrice = Number(searchParams.maxPrice);
     }
 
     const response = await apiClient.get("/products", { params });
@@ -455,6 +492,8 @@ const applySearch = () => {
 const clearSearch = () => {
   searchParams.keyword = "";
   searchParams.categoryName = ""; // Reset dropdown to "All Categories"
+  searchParams.minPrice = null; // Reset minPrice
+  searchParams.maxPrice = null; // Reset maxPrice
   nextPageToken.value = null; // Reset pagination
   fetchProducts(null, true); // Fetch all products again
 };
@@ -468,6 +507,13 @@ const downloadExcel = async () => {
     }
     if (searchParams.categoryName) {
       params.append("categoryName", searchParams.categoryName);
+    }
+    // Add minPrice and maxPrice if they have values
+    if (searchParams.minPrice !== null && searchParams.minPrice !== "") {
+      params.append("minPrice", String(searchParams.minPrice));
+    }
+    if (searchParams.maxPrice !== null && searchParams.maxPrice !== "") {
+      params.append("maxPrice", String(searchParams.maxPrice));
     }
 
     // Make an authenticated API request to get the blob
